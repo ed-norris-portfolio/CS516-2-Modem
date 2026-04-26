@@ -1,7 +1,7 @@
 # CS516 - Project 2 - Modem output
 
 ### Description
-Given simulated modem data recorded in a wav file, determine the contents of the message.  This script expects the "answer" side of a 300 baud modem and that the data encodes ASCII text.
+Given simulated modem data recorded in a wav file (`message.wav`), determine the contents of the message.  This script expects the "answer" side of a 300 baud modem and that the data encodes ASCII text.
 
 
 ### Development

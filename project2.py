@@ -18,25 +18,22 @@ def describe_wav_data_details(wav_file_name, data, sample_rate, baud_rate):
     :return: None
     """
     print(f'\n{wav_file_name}:')
+    print(f"\tsample rate: {sample_rate} samples / second")
+    print(f"\t{data.shape[0]} samples")
     samples_per_bit = sample_rate // baud_rate
-    print(f"\t{samples_per_bit} samples per bit")
-    print(f"\ttotal number of bits in the message:  {data.shape[0] // samples_per_bit}")
+    print(f"\t{samples_per_bit} samples per bit (at {baud_rate} baud)")
+    print(f"\t{data.shape[0] // samples_per_bit} bits in the message")
+    print(f"\t{data.shape[0] // (samples_per_bit * 10)} ASCII characters in the message")
 
-def tone_power(samples, N, f, fs):
+def tone_power(samples, arr):
     """
     Determine the power of the sample data at the given frequency
     :param samples: The data
-    :param N: The size of the sample data
-    :param f: The frequency to examine
-    :param fs: The sample rate of the data
+    :param arr: Pre-computed array
     :return: The power at the given frequency
     """
-    I = 0
-    Q = 0
-    for n in range(N):
-        angle = 2 * np.pi * f * n / fs
-        I += samples[n] * np.cos(angle)
-        Q += samples[n] * np.sin(angle)
+    I = np.dot(samples, arr[0])
+    Q = np.dot(samples, arr[1])
     return np.square(I) + np.square(Q)
 
 def data_bits_to_byte(bits):
@@ -76,10 +73,19 @@ def wav_to_text(wav_file_name):
     f_zero = 2025
     f_one = 2225
     bits = []
+
+    zero_array = []
+    one_array = []
+    for i in range(samples_per_bit):
+        zero_array.append(2 * np.pi * f_zero * i / sample_rate)
+        one_array.append(2 * np.pi * f_one * i / sample_rate)
+    zero_array = (np.cos(zero_array), np.sin(zero_array))
+    one_array = (np.cos(one_array), np.sin(one_array))
+
     for i in range(0, data.shape[0] // samples_per_bit):
         bit_data = data[i * samples_per_bit: (i + 1) * samples_per_bit]
-        zero = tone_power(bit_data, samples_per_bit, f_zero, sample_rate)
-        one = tone_power(bit_data, samples_per_bit, f_one, sample_rate)
+        zero = tone_power(bit_data, zero_array)
+        one = tone_power(bit_data, one_array)
         if zero > one:
             bits.append(0)
         else:
