@@ -82,3 +82,8 @@ OBLIGATIONS IN CURITIBA? THINK OF THE KIDS!"
 ```
 
 But I get the gist
+
+To run this part:  (I use 10 as the minimum power level, YMMV)
+```commandline
+uv run project2.py -f [the wav file] -p [minimum power level]
+```
