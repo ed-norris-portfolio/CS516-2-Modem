@@ -81,7 +81,7 @@ OÔ ÃO§:P=Ü WNS9 REAN ISLAND IN THE AMAZON, ØE WIRED THE ENTIRE BUS FR vEMEE
 OBLIGATIONS IN CURITIBA? THINK OF THE KIDS!"
 ```
 
-But I get the gist
+But I get the gist - see `information_society_story.txt` for the whole story
 
 To run this part:  (I use 10 as the minimum power level, YMMV)
 ```commandline
