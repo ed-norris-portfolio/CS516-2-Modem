@@ -1,12 +1,14 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
+#     "argparse>=1.4.0",
 #     "numpy>=2.4.4",
 #     "scipy>=1.17.1",
 # ]
 # ///
 from scipy.io import wavfile
 import numpy as np
+import argparse
 
 def describe_wav_data_details(wav_file_name, data, sample_rate, baud_rate):
     """
@@ -23,7 +25,25 @@ def describe_wav_data_details(wav_file_name, data, sample_rate, baud_rate):
     samples_per_bit = sample_rate // baud_rate
     print(f"\t{samples_per_bit} samples per bit (at {baud_rate} baud)")
     print(f"\t{data.shape[0] // samples_per_bit} bits in the message")
-    print(f"\t{data.shape[0] // (samples_per_bit * 10)} ASCII characters in the message")
+    print(f"\t{data.shape[0] // (samples_per_bit * 10)} ASCII characters in the message\n")
+
+def create_power_matrices(f_zero, f_one, sample_rate, samples_per_bit):
+    """
+    Pre-compute the arrays necessary to calculate power levels at these frequencies
+    :param f_zero:
+    :param f_one:
+    :param sample_rate:
+    :param samples_per_bit:
+    :return:
+    """
+    zero_array = []
+    one_array = []
+    for i in range(samples_per_bit):
+        zero_array.append(2 * np.pi * f_zero * i / sample_rate)
+        one_array.append(2 * np.pi * f_one * i / sample_rate)
+    zero_array = (np.cos(zero_array), np.sin(zero_array))
+    one_array = (np.cos(one_array), np.sin(one_array))
+    return zero_array, one_array
 
 def tone_power(samples, arr):
     """
@@ -56,17 +76,18 @@ def data_bits_to_byte(bits):
         twos_position <<= 1
     return byte_val
 
-def wav_to_text(wav_file_name):
+def wav_to_text(wav_file_name, min_power):
     """
     Read wav data as 300 baud receiving data and translate into text
     :param wav_file_name: location of the wav file
+    :param min_power: minimum power level
     :return: string of ASCII characters
-    :raises: ValueError if wav_file_name is stereo
     """
     baud_rate = 300
     sample_rate, data = wavfile.read(wav_file_name)
     if len(data.shape) != 1:
-        raise ValueError('wav file must be mono')
+        # grab the left channel
+        data = data.reshape(len(data) * len(data[0]))[::2]
     describe_wav_data_details(wav_file_name, data, sample_rate, baud_rate)
 
     samples_per_bit = sample_rate // baud_rate
@@ -74,26 +95,25 @@ def wav_to_text(wav_file_name):
     f_one = 2225
     bits = []
 
-    zero_array = []
-    one_array = []
-    for i in range(samples_per_bit):
-        zero_array.append(2 * np.pi * f_zero * i / sample_rate)
-        one_array.append(2 * np.pi * f_one * i / sample_rate)
-    zero_array = (np.cos(zero_array), np.sin(zero_array))
-    one_array = (np.cos(one_array), np.sin(one_array))
-
+    zero_array, one_array = create_power_matrices(f_zero, f_one, sample_rate, samples_per_bit)
     for i in range(0, data.shape[0] // samples_per_bit):
         bit_data = data[i * samples_per_bit: (i + 1) * samples_per_bit]
         zero = tone_power(bit_data, zero_array)
         one = tone_power(bit_data, one_array)
-        if zero > one:
-            bits.append(0)
-        else:
-            bits.append(1)
+        if zero > min_power and one > min_power:
+            if zero > one:
+                bits.append(0)
+            else:
+                bits.append(1)
 
     message = ""
-    for i in range(0, len(bits) // 10):
-        message += chr(data_bits_to_byte(bits[i * 10:(i+1) * 10]))
+    i = 0
+    while i < len(bits)-9:
+        if bits[i] == 0 and bits[i+9] == 1:
+            message += chr(data_bits_to_byte(bits[i:i+10]))
+            i += 10
+        else:
+            i += 1
 
     return message
 
@@ -101,8 +121,21 @@ if __name__ == '__main__':
     """
     Given received 300 baud modem data encoded in a wav file, decode and print the message
     """
-    file_name = 'message.wav'
-    text = wav_to_text(file_name)
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "-f", "--file",
+        help="Input wav file.",
+        default="message.wav",
+    )
+    ap.add_argument(
+        "-p", "--power",
+        help="Minimum power level",
+        type=float,
+        default=10.0,
+    )
+    args = ap.parse_args()
+
+    text = wav_to_text(args.file, args.power)
     with open('message.txt', 'w') as f:
         f.write(text)
-    print(f'The message in {file_name} is "{text}"')
+    print(f'The message in {args.file} is "{text}"')
