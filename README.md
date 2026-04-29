@@ -21,7 +21,7 @@ So it is simply a matter of reading a bits worth of data, determining if it is z
 Run with `uv` 
 
 ```commandline
-uv run project2.py
+uv run project2.py -f [wav file]
 ```
 
 ### Extra work

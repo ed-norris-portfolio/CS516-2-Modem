@@ -126,7 +126,7 @@ if __name__ == '__main__':
     ap.add_argument(
         "-f", "--file",
         help="Input wav file.",
-        default="samples/message.wav",
+        required=True,
     )
     ap.add_argument(
         "-p", "--power",
