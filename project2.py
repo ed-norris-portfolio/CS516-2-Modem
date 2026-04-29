@@ -84,11 +84,12 @@ def wav_to_text(wav_file_name, min_power):
     :return: string of ASCII characters
     """
     baud_rate = 300
-    sample_rate, data = wavfile.read(wav_file_name)
-    if len(data.shape) != 1:
+    sample_rate, raw_data = wavfile.read(wav_file_name)
+    if len(raw_data.shape) != 1:
         # grab the left channel
-        data = data.reshape(len(data) * len(data[0]))[::2]
-    describe_wav_data_details(wav_file_name, data, sample_rate, baud_rate)
+        raw_data = raw_data.reshape(len(raw_data) * len(raw_data[0]))[::2]
+    normalized_data = raw_data / np.max(np.abs(raw_data))
+    describe_wav_data_details(wav_file_name, normalized_data, sample_rate, baud_rate)
 
     samples_per_bit = sample_rate // baud_rate
     f_zero = 2025
@@ -96,8 +97,8 @@ def wav_to_text(wav_file_name, min_power):
     bits = []
 
     zero_array, one_array = create_power_matrices(f_zero, f_one, sample_rate, samples_per_bit)
-    for i in range(0, data.shape[0] // samples_per_bit):
-        bit_data = data[i * samples_per_bit: (i + 1) * samples_per_bit]
+    for i in range(0, normalized_data.shape[0] // samples_per_bit):
+        bit_data = normalized_data[i * samples_per_bit: (i + 1) * samples_per_bit]
         zero = tone_power(bit_data, zero_array)
         one = tone_power(bit_data, one_array)
         if zero > min_power and one > min_power:
@@ -125,7 +126,7 @@ if __name__ == '__main__':
     ap.add_argument(
         "-f", "--file",
         help="Input wav file.",
-        default="message.wav",
+        default="samples/message.wav",
     )
     ap.add_argument(
         "-p", "--power",
@@ -135,7 +136,10 @@ if __name__ == '__main__':
     )
     args = ap.parse_args()
 
-    text = wav_to_text(args.file, args.power)
-    with open('message.txt', 'w') as f:
-        f.write(text)
-    print(f'The message in {args.file} is "{text}"')
+    try:
+        text = wav_to_text(args.file, args.power)
+        with open('message.txt', 'w') as f:
+            f.write(text)
+        print(f'The message in {args.file} is "{text}"')
+    except Exception as e:
+        print(e)
