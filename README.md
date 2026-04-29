@@ -28,10 +28,6 @@ uv run project2.py -f [wav file]
 
 There is a particular song that is a message contained in a 300 baud modem recording.  Find it and decode it.
 
-`brew install youtubedr`
-
-`youtubedr info 8yfj-Eo3iNo`
-
 Title:       300BPS N, 8, 1 (Terminal Mode or ASCII Download)
 Author:      Information Society - Topic
 Duration:    2m59s
@@ -55,8 +51,6 @@ Duration:    2m59s
 | 242 | 25 | 240p | | 0 | 0.3 | 16057 | video/webm; codecs="vp9" | |
 | 278 | 25 | 144p | | 0 | 0.3 | 12694 | video/webm; codecs="vp9" | |
 | 160 | 25 | 144p | | 0 | 0.2 | 10165 | video/mp4; codecs="avc1.4d400b" | |
-
-`youtubedr download -q 251 -d ./ -o song.webm 8yfj-Eo3iNo`
 
 `ffmpeg -i song.webm -c:a pcm_f32le song.wav`
 
