@@ -24,7 +24,7 @@ Run with `uv`
 uv run project2.py -f [wav file]
 ```
 
-### Extra work
+## Extra work
 
 There is a particular song that is a message contained in a 300 baud modem recording.  Find it and decode it.
 
@@ -59,7 +59,20 @@ $ file song.wav
 song.wav: RIFF (little-endian) data, WAVE audio, IEEE Float, stereo 48000 Hz
 ```
 
-![img.png](img.png)
+
+### There are 4 sections of this track (screenshots from Audacity)
+
+1 -> 2: Silence for 1/20th of a second then a steady mark
+
+![Section1_2](Section1_2.png)
+
+2 -> 3: Mark for about 10 seconds before the data starts
+
+![Section2_3](Section2_3.png)
+
+3 -> 4: Data for just less than three minutes, then fade out
+
+![Section3_4](Section3_4.png)
 
 So
 1. Determine a threshold for a signal
